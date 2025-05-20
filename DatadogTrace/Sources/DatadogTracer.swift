@@ -87,6 +87,20 @@ internal final class DatadogTracer: OTTracer, OpenTelemetryApi.Tracer {
         )
     }
 
+    func startSpan(operationName: String, traceID: String?, spanID: String?, parentSpanID: String?, tags: [String: Encodable]? = nil, startTime: Date? = nil) -> OTSpan {
+        return startSpan(
+            spanContext: createSpanContext(
+                traceID: traceID != nil ? TraceID(traceID!, representation: .hexadecimal) : nil,
+                spanID: spanID != nil ? SpanID(spanID!, representation: .hexadecimal) : nil,
+                parentSpanID: parentSpanID != nil ? SpanID(parentSpanID!, representation: .hexadecimal) : nil,
+                using: localTraceSampler
+            ),
+            operationName: operationName,
+            tags: tags,
+            startTime: startTime
+        )
+    }
+
     func startRootSpan(operationName: String, tags: [String: Encodable]? = nil, startTime: Date? = nil) -> OTSpan {
         return startSpan(
             spanContext: createSpanContext(parentSpanContext: nil, using: localTraceSampler),
@@ -121,6 +135,17 @@ internal final class DatadogTracer: OTTracer, OpenTelemetryApi.Tracer {
     }
 
     // MARK: - Internal
+
+    internal func createSpanContext(traceID: TraceID?, spanID: SpanID?, parentSpanID: SpanID?, using sampler: Sampler) -> DDSpanContext {
+        return DDSpanContext(
+            traceID: traceID ?? traceIDGenerator.generate(),
+            spanID: spanID ?? spanIDGenerator.generate(),
+            parentSpanID: parentSpanID ,
+            baggageItems: BaggageItems(),
+            sampleRate: sampler.samplingRate,
+            isKept: sampler.sample()
+        )
+    }
 
     internal func createSpanContext(parentSpanContext: DDSpanContext?, using sampler: Sampler) -> DDSpanContext {
         return DDSpanContext(

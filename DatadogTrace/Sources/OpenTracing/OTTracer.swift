@@ -22,6 +22,15 @@ public protocol OTTracer {
         tags: [String: Encodable]?,
         startTime: Date?
     ) -> OTSpan
+    
+    func startSpan(
+        operationName: String,
+        traceID: String?,
+        spanID: String?,
+        parentSpanID: String?,
+        tags: [String: Encodable]?,
+        startTime: Date?
+    ) -> OTSpan
 
     /// Start a new root span with the given operation name.
     /// - Parameters:
